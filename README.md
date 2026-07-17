@@ -20,9 +20,9 @@ Respeta la asignación MCP vs script del CLAUDE.md. Reporta resumen al final.
 
 4. Selecciona el repo.
 5. Environment custom: setup command `bash setup.sh`. Sin variables de entorno. Network access: **Full**.
-6. Connectors: deja SOLO el de **Atlassian** (Jira). Quita los demás.
+6. Connectors: deja **Atlassian** (Jira) y **Composio** (para subir el reporte a OneDrive). Quita los demás.
 7. Trigger: schedule diario a la hora que prefieras (ej. 18:00 America/Lima).
-8. **Run now** y revisa el primer run: debe aparecer un commit nuevo con el docx en `reports/`.
+8. **Run now** y revisa el primer run: el reporte completo debe aparecer como texto en el chat de la corrida, y el archivo en la carpeta "Reportes Jira" del OneDrive conectado en Composio.
 
 ## Dónde ver el reporte
 

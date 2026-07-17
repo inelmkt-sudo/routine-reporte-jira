@@ -4,11 +4,15 @@
 
 Generar cada día un reporte ejecutivo con la actividad del día en curso (desde las 00:00 de hoy, America/Lima, hasta el momento de la corrida) de todos los proyectos Jira de INEL, agrupado por integrante, incluyendo cambios de campos (changelog), comentarios y la jerarquía epic → tarea → subtarea.
 
-**Doble entrega, en este orden de prioridad:**
-1. **Reporte completo en TEXTO como mensaje final de la corrida** (canal principal, nunca falla): el reporte entero con las 4 secciones del formato exacto, en Markdown. NO un resumen — el mismo contenido del docx, íntegro.
-2. **Word (.docx) en `reports/` + commit + push a `main`** (canal de archivo, mejor esfuerzo): si el push falla (403/permisos), NO es un error fatal — el reporte ya se entregó por texto. Reintenta el push UNA vez (`git pull --rebase` antes), y si sigue fallando déjalo commiteado, menciona el bloqueo en una línea al final del mensaje y termina con exit 0.
+**Doble entrega, en este orden de prioridad. PROHIBIDO hacer git push — GitHub solo aloja este código, no es canal de entrega:**
+1. **Reporte completo en TEXTO como mensaje final de la corrida** (canal principal, nunca falla): el reporte entero con las 4 secciones del formato exacto, en Markdown. NO un resumen — el contenido íntegro.
+2. **Archivo en OneDrive vía MCP de Composio** (canal de archivo): sube el reporte a la carpeta **"Reportes Jira"** (folder ID `01EJAD6PY6APQDF2W2CVFYN3DKJ4JGCZJS`, OneDrive de natalieaguirre@inelinc.com, conexión Composio `one_drive` ya activa).
+   - Intento A: genera el docx con `scripts/render_docx.py` y súbelo con `ONE_DRIVE_ONEDRIVE_UPLOAD_FILE` (file con name `reporte-jira-YYYY-MM-DD.docx`, mimetype `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, folder = el ID de arriba, `conflict_behavior: "replace"`).
+   - Intento B (si el staging del binario falla): sube el reporte completo como texto con `ONE_DRIVE_ONEDRIVE_CREATE_TEXT_FILE` (name `reporte-jira-YYYY-MM-DD.md`, mismo folder ID, `conflict_behavior: "replace"`) — este camino está verificado y funciona.
+   - Flujo Composio: `COMPOSIO_SEARCH_TOOLS` (use_case de subir archivo a OneDrive) → `COMPOSIO_MULTI_EXECUTE_TOOL` con el tool_slug exacto. La conexión ya existe; no crees conexiones nuevas.
+   - Verifica la subida con `ONE_DRIVE_ONEDRIVE_FIND_FILE` (name exacto, mismo folder).
 
-Éxito = el reporte completo en texto en el mensaje final. El docx pusheado es deseable, no imprescindible.
+Éxito = reporte completo en texto en el mensaje final + archivo en OneDrive. Si OneDrive falla tras ambos intentos, no es fatal: el texto ya se entregó; menciona el fallo en una línea y exit 0.
 
 ## Regla #1 — Autonomía total
 
@@ -21,7 +25,7 @@ Operas sin humano presente. No preguntas, no pides confirmación, no esperas inp
 | Buscar issues actualizados | MCP Atlassian `searchJiraIssuesUsingJql` | Lectura |
 | Changelog de cada issue | MCP Atlassian `getJiraIssue` con `expand: "changelog"` | Lectura |
 | Generar .docx | Script `scripts/render_docx.py` | python-docx |
-| Publicar reporte | `git add/commit/push` | El repo es el canal de entrega |
+| Publicar reporte | MCP Composio → OneDrive (`ONE_DRIVE_ONEDRIVE_UPLOAD_FILE` / `CREATE_TEXT_FILE`) | NUNCA git push |
 
 ## Parámetros fijos
 
@@ -174,7 +178,7 @@ El script produce `reports/reporte-jira-YYYY-MM-DD.docx`. Verifica que el archiv
 
 ### 6. Mensaje final = el reporte completo en texto
 
-El mensaje final de la corrida ES el reporte: las 4 secciones del formato exacto, completas, en Markdown (tablas incluidas). Prohibido resumir o remitir al docx ("ver detalles en el archivo" está prohibido). Al final agrega una línea de estado: "Docx: reports/reporte-jira-YYYY-MM-DD.docx pusheado ✓" o "Docx generado; push bloqueado por permisos (403) — pendiente de acceso de escritura al repo".
+El mensaje final de la corrida ES el reporte: las 4 secciones del formato exacto, completas, en Markdown (tablas incluidas). Prohibido resumir o remitir al archivo ("ver detalles en el docx" está prohibido). Al final agrega una línea de estado: "OneDrive: reporte-jira-YYYY-MM-DD.docx subido a Reportes Jira ✓" (o el .md del intento B, o "subida a OneDrive falló: {motivo}").
 
 ## Formato EXACTO del reporte — no improvises
 
