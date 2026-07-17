@@ -26,5 +26,5 @@ Respeta la asignación MCP vs script del CLAUDE.md. Reporta resumen al final.
 
 ## Dónde ver el reporte
 
-- En GitHub: carpeta `reports/` del repo (descarga el .docx).
-- Opcional: clona el repo dentro de tu OneDrive y haz `git pull` para tenerlo sincronizado localmente.
+- **Texto completo**: en el chat de cada corrida del Routine (mensaje final).
+- **Archivo**: carpeta "Reportes Jira" del OneDrive conectado en Composio (cuenta natalieaguirre@inelinc.com) — al ser OneDrive empresarial, puedes compartir esa carpeta con quien la necesite.
