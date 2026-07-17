@@ -2,7 +2,13 @@
 
 ## Objetivo
 
-Generar cada día un reporte ejecutivo en Word (.docx) con la actividad del día en curso (desde las 00:00 de hoy, America/Lima, hasta el momento de la corrida) de todos los proyectos Jira de INEL, agrupado por integrante, incluyendo cambios de campos (changelog), comentarios y la jerarquía epic → tarea → subtarea. Guardar el reporte en `reports/` y hacer commit + push al repo. Éxito = un `.docx` nuevo en `reports/` con la fecha de hoy, pusheado.
+Generar cada día un reporte ejecutivo con la actividad del día en curso (desde las 00:00 de hoy, America/Lima, hasta el momento de la corrida) de todos los proyectos Jira de INEL, agrupado por integrante, incluyendo cambios de campos (changelog), comentarios y la jerarquía epic → tarea → subtarea.
+
+**Doble entrega, en este orden de prioridad:**
+1. **Reporte completo en TEXTO como mensaje final de la corrida** (canal principal, nunca falla): el reporte entero con las 4 secciones del formato exacto, en Markdown. NO un resumen — el mismo contenido del docx, íntegro.
+2. **Word (.docx) en `reports/` + commit + push a `main`** (canal de archivo, mejor esfuerzo): si el push falla (403/permisos), NO es un error fatal — el reporte ya se entregó por texto. Reintenta el push UNA vez (`git pull --rebase` antes), y si sigue fallando déjalo commiteado, menciona el bloqueo en una línea al final del mensaje y termina con exit 0.
+
+Éxito = el reporte completo en texto en el mensaje final. El docx pusheado es deseable, no imprescindible.
 
 ## Regla #1 — Autonomía total
 
@@ -166,9 +172,9 @@ git add reports/ && git commit -m "Reporte diario Jira $(date +%F)" && git push
 
 El script produce `reports/reporte-jira-YYYY-MM-DD.docx`. Verifica que el archivo exista antes del commit. Si el push falla, reintenta una vez con `git pull --rebase` primero.
 
-### 6. Resumen final
+### 6. Mensaje final = el reporte completo en texto
 
-Al terminar reporta en 5 líneas: total de issues, integrante más activo, iniciativas transversales detectadas, número de alertas, ruta del docx generado.
+El mensaje final de la corrida ES el reporte: las 4 secciones del formato exacto, completas, en Markdown (tablas incluidas). Prohibido resumir o remitir al docx ("ver detalles en el archivo" está prohibido). Al final agrega una línea de estado: "Docx: reports/reporte-jira-YYYY-MM-DD.docx pusheado ✓" o "Docx generado; push bloqueado por permisos (403) — pendiente de acceso de escritura al repo".
 
 ## Formato EXACTO del reporte — no improvises
 
