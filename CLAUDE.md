@@ -61,6 +61,10 @@ Reglas aprendidas (respétalas, evitan fallos reales):
 
 **Presupuesto de llamadas** (respétalo — es la métrica de eficiencia del sistema): 1-3 páginas de búsqueda principal + 1 changelog por issue que lo requiera (UNA sola llamada por issue aunque caiga en varios grupos — nunca repitas) + 1 búsqueda única para todas las iniciativas. Un día típico ≈ 15-25 llamadas en total.
 
+**Changelogs EN PARALELO**: lanza las llamadas `getJiraIssue` en lotes de 5-7 dentro del mismo turno (múltiples tool calls en un solo mensaje) — son independientes entre sí. Nunca una por una en turnos separados: 14 changelogs secuenciales = 14 round-trips; en lotes paralelos = 2-3.
+
+**Disciplina de contexto** (evita que la corrida se alargue o se comprima el contexto): procesa cada lote de changelogs INMEDIATAMENTE — extrae solo los eventos del día (cambios, transiciones, horas) y anéxalos a `data/report.json` en disco; no cargues ni retengas los JSON crudos de Jira en la conversación. `data/report.json` en disco es tu única memoria de trabajo: constrúyelo incrementalmente (búsqueda → añade issues; cada lote de changelogs → añade cambios/horas; iniciativas → añade avance) y al final el mensaje de texto se genera leyendo ese archivo una sola vez.
+
 NO pidas changelog a: issues creados hoy que siguen en estado "new" (Pendiente/Por iniciar) sin más eventos — su única historia es la creación, ya la tienes del paso 1.
 
 Pide changelog únicamente a estos grupos de issues del paso 1 (los demás no lo necesitan):
@@ -167,14 +171,16 @@ En `resumen.alertas` incluye SIEMPRE, si aplica: fechas de vencimiento movidas e
 
 Regla de exhaustividad: en `integrantes[].issues` va **TODO** issue tocado por esa persona en la ventana — sin omitir, sin resumir, sin agrupar "y 5 más". El resumen ejecutivo condensa; el detalle es completo. La optimización está en el formato (el script lo renderiza como tabla compacta), no en recortar datos.
 
-### 5. Render y publicación
+### 5. Render y publicación a OneDrive
 
 ```
+pip show python-docx >/dev/null 2>&1 || pip install python-docx
 python scripts/render_docx.py data/report.json
-git add reports/ && git commit -m "Reporte diario Jira $(date +%F)" && git push
 ```
 
-El script produce `reports/reporte-jira-YYYY-MM-DD.docx`. Verifica que el archivo exista antes del commit. Si el push falla, reintenta una vez con `git pull --rebase` primero.
+El script produce `reports/reporte-jira-YYYY-MM-DD.docx`. Luego súbelo a OneDrive según la sección "Doble entrega" del inicio (Composio, intento A docx / intento B md). NADA de git: ni add, ni commit, ni push.
+
+**Composio SIN búsqueda previa**: los tool slugs ya están fijados en este documento (`ONE_DRIVE_ONEDRIVE_UPLOAD_FILE`, `ONE_DRIVE_ONEDRIVE_CREATE_TEXT_FILE`, folder ID `01EJAD6P3ZU2IRMMSWJVELSYZOJJAG3Y26`). Llama `COMPOSIO_MULTI_EXECUTE_TOOL` DIRECTAMENTE con ellos — no gastes llamadas en `COMPOSIO_SEARCH_TOOLS` salvo que la ejecución directa devuelva error de slug desconocido.
 
 ### 6. Mensaje final = el reporte completo en texto
 
@@ -221,7 +227,7 @@ Reglas duras del formato: mismos títulos siempre; ninguna sección se omite (si
 
 ## Variables de entorno
 
-Ninguna. La autenticación Jira va por el connector Atlassian (MCP remoto) y el push usa el token del propio Routine.
+Ninguna. La autenticación Jira va por el connector Atlassian y la subida a OneDrive por el connector Composio (ambos MCP remotos).
 
 ## Scripts disponibles
 
