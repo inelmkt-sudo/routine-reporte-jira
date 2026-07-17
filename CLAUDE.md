@@ -6,7 +6,7 @@ Generar cada día un reporte ejecutivo con la actividad del día en curso (desde
 
 **Doble entrega, en este orden de prioridad. PROHIBIDO hacer git push — GitHub solo aloja este código, no es canal de entrega:**
 1. **Reporte completo en TEXTO como mensaje final de la corrida** (canal principal, nunca falla): el reporte entero con las 4 secciones del formato exacto, en Markdown. NO un resumen — el contenido íntegro.
-2. **Archivo en OneDrive vía MCP de Composio** (canal de archivo): sube el reporte a la carpeta **"Reportes Jira"** (folder ID `01EJAD6PY6APQDF2W2CVFYN3DKJ4JGCZJS`, OneDrive de natalieaguirre@inelinc.com, conexión Composio `one_drive` ya activa).
+2. **Archivo en OneDrive vía MCP de Composio** (canal de archivo): sube el reporte a la carpeta **"/09. Marketing/INSTITUTE/REGISTRO/Actividades"** (folder ID `01EJAD6P3ZU2IRMMSWJVELSYZOJJAG3Y26`, OneDrive de natalieaguirre@inelinc.com, conexión Composio `one_drive` ya activa).
    - Intento A: genera el docx con `scripts/render_docx.py` y súbelo con `ONE_DRIVE_ONEDRIVE_UPLOAD_FILE` (file con name `reporte-jira-YYYY-MM-DD.docx`, mimetype `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, folder = el ID de arriba, `conflict_behavior: "replace"`).
    - Intento B (si el staging del binario falla): sube el reporte completo como texto con `ONE_DRIVE_ONEDRIVE_CREATE_TEXT_FILE` (name `reporte-jira-YYYY-MM-DD.md`, mismo folder ID, `conflict_behavior: "replace"`) — este camino está verificado y funciona.
    - Flujo Composio: `COMPOSIO_SEARCH_TOOLS` (use_case de subir archivo a OneDrive) → `COMPOSIO_MULTI_EXECUTE_TOOL` con el tool_slug exacto. La conexión ya existe; no crees conexiones nuevas.
@@ -178,7 +178,7 @@ El script produce `reports/reporte-jira-YYYY-MM-DD.docx`. Verifica que el archiv
 
 ### 6. Mensaje final = el reporte completo en texto
 
-El mensaje final de la corrida ES el reporte: las 4 secciones del formato exacto, completas, en Markdown (tablas incluidas). Prohibido resumir o remitir al archivo ("ver detalles en el docx" está prohibido). Al final agrega una línea de estado: "OneDrive: reporte-jira-YYYY-MM-DD.docx subido a Reportes Jira ✓" (o el .md del intento B, o "subida a OneDrive falló: {motivo}").
+El mensaje final de la corrida ES el reporte: las 4 secciones del formato exacto, completas, en Markdown (tablas incluidas). Prohibido resumir o remitir al archivo ("ver detalles en el docx" está prohibido). Al final agrega una línea de estado: "OneDrive: reporte-jira-YYYY-MM-DD.docx subido a Actividades ✓" (o el .md del intento B, o "subida a OneDrive falló: {motivo}").
 
 ## Formato EXACTO del reporte — no improvises
 
