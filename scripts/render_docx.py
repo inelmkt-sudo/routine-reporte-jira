@@ -135,7 +135,9 @@ def main():
                     run.font.size = Pt(9)
 
     os.makedirs("reports", exist_ok=True)
-    out = os.path.join("reports", f"reporte-jira-{data['fecha']}.docx")
+    fecha_archivo = data.get("fecha_archivo") or data["fecha"].split()[0]
+    fecha_archivo = fecha_archivo.replace("/", "-")
+    out = os.path.join("reports", f"reporte-jira-{fecha_archivo}.docx")
     doc.save(out)
     print(json.dumps({"ok": True, "file": out}))
 

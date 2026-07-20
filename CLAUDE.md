@@ -7,8 +7,8 @@ Generar cada día un reporte ejecutivo con la actividad del día en curso (desde
 **Doble entrega, en este orden de prioridad. PROHIBIDO hacer git push — GitHub solo aloja este código, no es canal de entrega:**
 1. **Reporte completo en TEXTO como mensaje final de la corrida** (canal principal, nunca falla): el reporte entero con las 4 secciones del formato exacto, en Markdown. NO un resumen — el contenido íntegro.
 2. **Archivo en OneDrive vía MCP de Composio** (canal de archivo): sube el reporte a la carpeta **"/09. Marketing/INSTITUTE/REGISTRO/Actividades"** (folder ID `01EJAD6P3ZU2IRMMSWJVELSYZOJJAG3Y26`, OneDrive de natalieaguirre@inelinc.com, conexión Composio `one_drive` ya activa).
-   - Intento A: genera el docx con `scripts/render_docx.py` y súbelo con `ONE_DRIVE_ONEDRIVE_UPLOAD_FILE` (file con name `reporte-jira-YYYY-MM-DD.docx`, mimetype `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, folder = el ID de arriba, `conflict_behavior: "replace"`).
-   - Intento B (si el staging del binario falla): sube el reporte completo como texto con `ONE_DRIVE_ONEDRIVE_CREATE_TEXT_FILE` (name `reporte-jira-YYYY-MM-DD.md`, mismo folder ID, `conflict_behavior: "replace"`) — este camino está verificado y funciona.
+   - Intento A (best-effort, suele fallar porque Composio no soporta staging de binarios inline): genera el docx con `scripts/render_docx.py` y súbelo con `ONE_DRIVE_ONEDRIVE_UPLOAD_FILE` (name `reporte-jira-YYYY-MM-DD.docx`, mimetype `application/vnd.openxmlformats-officedocument.wordprocessingml.document`, **folder** = el ID de arriba — NO uses `folder_id`, el argumento se llama `folder`—, `conflict_behavior: "replace"`). Si falla, pasa directo al intento B sin reintentar.
+   - Intento B (canal principal verificado): sube el reporte completo como texto con `ONE_DRIVE_ONEDRIVE_CREATE_TEXT_FILE` (name `reporte-jira-YYYY-MM-DD.md`, mismo folder ID en argumento **folder**, `conflict_behavior: "replace"`) — este camino funciona siempre.
    - Flujo Composio: llama `COMPOSIO_MULTI_EXECUTE_TOOL` DIRECTAMENTE con estos slugs (están verificados) — NO uses `COMPOSIO_SEARCH_TOOLS` salvo error de slug desconocido. La conexión ya existe; no crees conexiones nuevas.
    - Verifica la subida con `ONE_DRIVE_ONEDRIVE_FIND_FILE` (name exacto, mismo folder).
 
@@ -46,7 +46,8 @@ Operas sin humano presente. No preguntas, no pides confirmación, no esperas inp
   - **Creada antes y actualizada hoy** → entra; pide su changelog y reporta solo los eventos con fecha de hoy (el campo `updated` solo guarda la última modificación, no dice qué pasó hoy).
   - Nombra el archivo del reporte con la fecha de hoy. Si el Routine corre más de una vez el mismo día, sobrescribe el mismo archivo (el reporte del día se va completando).
 - `searchResultMode`: `issues`
-- `maxResults`: 100. **OBLIGATORIO paginar**: si `pageInfo.hasNextPage` es true, repite la búsqueda con `nextPageToken` hasta agotar los resultados. Un solo día del equipo puede superar los 100 issues; quedarse con la primera página deja integrantes con actividad invisible (falla real detectada: 8 entregas de un integrante quedaron en la página no consultada). Antes de generar el reporte, verifica el total contra la suma por integrante.
+- `maxResults`: 100. **OBLIGATORIO paginar**: si `pageInfo.hasNextPage` es true, repite la búsqueda con `nextPageToken` hasta agotar los resultados. Un solo día del equipo puede superar los 100 issues; quedarse con la primera página deja integrantes con actividad invisible (falla real detectada: 8 entregas de un integrante quedaron en la página no consultada).
+- **Verificación de conteo** (obligatoria): al terminar la paginación, compara `total` devuelto por Jira con la cantidad de issues que realmente procesaste. Si hay discrepancia (procesados < total), repite la búsqueda o alerta en el reporte. Nunca delegues el procesamiento de la lista cruda a un subagente — procésala tú directamente para evitar pérdida silenciosa de issues.
 - `fields`: `["summary","status","assignee","project","updated","created","duedate","issuetype","parent","comment"]`
 - `responseContentFormat`: `markdown`
 
@@ -115,9 +116,9 @@ Con los issues del paso 1 (sin llamadas adicionales a Jira), detecta iniciativas
 
 Esto responde la pregunta del líder: "¿quiénes están trabajando en lo mismo desde pods distintos?"
 
-**Avance de cada iniciativa — UNA sola búsqueda para todas**: el avance se mide sobre TODOS los issues de cada iniciativa, no solo los de hoy. Combina todas las claves detectadas (máximo 8, prioriza las que cruzan más pods) en un único JQL con OR:
-`summary ~ "clave1" OR summary ~ "clave2" OR ...`
-con `fields: ["summary","status"]` (SOLO esos dos — más campos desborda tokens; el modo "count" no es confiable, devuelve issues completos), `maxResults: 100`, paginando si hay más. Luego clasifica localmente: asigna cada issue devuelto a su iniciativa comparando el summary contra las claves, y calcula por iniciativa total / completados (statusCategory done) / en curso / pendientes / porcentaje. Una llamada (o 2-3 páginas) en vez de una por iniciativa.
+**Avance de cada iniciativa — búsquedas pequeñas para evitar timeout**: el avance se mide sobre TODOS los issues de cada iniciativa, no solo los de hoy. Divide las claves detectadas en grupos de **2-3 claves** por JQL (máximo 8 claves en total, prioriza las que cruzan más pods):
+`summary ~ "clave1" OR summary ~ "clave2" OR summary ~ "clave3"`
+con `fields: ["summary","status"]` (SOLO esos dos), `maxResults: 100`, paginando si hay más. **NO metas 8 claves en un solo OR** — el MCP Atlassian tiene timeout de ~60s y consultas grandes lo superan (falla real: timeout repetido con 8 claves). Lanza las 2-3 búsquedas en paralelo. Luego clasifica localmente: asigna cada issue devuelto a su iniciativa comparando el summary contra las claves, y calcula por iniciativa total / completados (statusCategory done) / en curso / pendientes / porcentaje. Si una búsqueda individual falla por timeout, reporta el avance de esa iniciativa como "—" en vez de crashear.
 
 ### 4. Construir el JSON intermedio
 
@@ -125,7 +126,8 @@ Escribe `data/report.json` con esta estructura exacta:
 
 ```json
 {
-  "fecha": "YYYY-MM-DD",
+  "fecha": "Lunes DD/MM/YYYY (parcial, corte HH:MM)",
+  "fecha_archivo": "YYYY-MM-DD",
   "resumen": {
     "total_issues": 0,
     "creados": 0,
@@ -178,7 +180,7 @@ pip show python-docx >/dev/null 2>&1 || pip install python-docx
 python scripts/render_docx.py data/report.json
 ```
 
-El script produce `reports/reporte-jira-YYYY-MM-DD.docx`. Luego súbelo a OneDrive según la sección "Doble entrega" del inicio (Composio, intento A docx / intento B md). NADA de git: ni add, ni commit, ni push.
+El script produce `reports/reporte-jira-{fecha_archivo}.docx` (usa `fecha_archivo` del JSON, no `fecha` que contiene texto con barras). Luego súbelo a OneDrive según la sección "Doble entrega" del inicio (Composio, intento A docx / intento B md). NADA de git: ni add, ni commit, ni push.
 
 **Composio SIN búsqueda previa**: los tool slugs ya están fijados en este documento (`ONE_DRIVE_ONEDRIVE_UPLOAD_FILE`, `ONE_DRIVE_ONEDRIVE_CREATE_TEXT_FILE`, folder ID `01EJAD6P3ZU2IRMMSWJVELSYZOJJAG3Y26`). Llama `COMPOSIO_MULTI_EXECUTE_TOOL` DIRECTAMENTE con ellos — no gastes llamadas en `COMPOSIO_SEARCH_TOOLS` salvo que la ejecución directa devuelva error de slug desconocido.
 
