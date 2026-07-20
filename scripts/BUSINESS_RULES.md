@@ -1,6 +1,6 @@
 # Reglas de negocio — Horas laborales y alertas
 
-Lee este archivo UNA sola vez al inicio del paso 2 (changelogs). No lo recargues.
+Lee este archivo en el paso 0 (pre-carga), ANTES de la búsqueda JQL. Así las reglas están en contexto cuando procesas changelogs en paso 2 sin necesidad de releer. No lo recargues — si el sistema comprime, las reglas sobreviven en el resumen comprimido porque son pocas y están al inicio del contexto.
 
 ## Horas laborales (America/Lima)
 
